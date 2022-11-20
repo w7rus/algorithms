@@ -103,11 +103,13 @@
                     {
                         d[0][kvNodeKeyTo.Key] = (kvNodeKeyTo.Value, nodeKeyFrom);
                     }
-                    
-                    var queue = new PriorityQueue<TNodeKey, ulong>(_map[nodeKeyFrom].Select(_ => (_.Key, _.Value)));
+
+                    var queue = new PriorityQueue<TNodeKey, ulong>();
 
                     for (var dl = 0;; dl++)
                     {
+                        queue.EnqueueRange(_map[nodeKeyFrom].Where(kvNodeKeyTo => !s.Contains(kvNodeKeyTo.Key)).Select(_ => (_.Key, _.Value)));
+                        
                         var minNodeKey = queue.Dequeue();
 
                         s.Add(minNodeKey);
@@ -129,6 +131,8 @@
 
                             d[dl + 1][kvNodeKeyTo.Key] = (isGreaterThan ? _2 : _1, isGreaterThan ? minNodeKey : d[dl][kvNodeKeyTo.Key].from);
                         }
+                        
+                        queue.Clear();
                     }
                     
                     s.RemoveAt(0);
