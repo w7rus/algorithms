@@ -61,11 +61,11 @@ namespace Frog
 
                     for (long velocity = 0; velocity < _map.Length; velocity++)
                     {
-                        var unchanged = d.Find(_ => _.Position == position - velocity && _.Velocity == velocity)?.Step ?? int.MaxValue;
-                        var increase = d.Find(_ => _.Position == position - velocity && _.Velocity == velocity + 1)?.Step ?? int.MaxValue;
-                        var decrease = d.Find(_ => _.Position == position - velocity && _.Velocity == velocity - 1)?.Step ?? int.MaxValue;
+                        var unchanged = d.Find(_ => _.Position == position - velocity && _.Velocity == velocity)?.Step ?? long.MaxValue;
+                        var increase = d.Find(_ => _.Position == position - velocity && _.Velocity == velocity + 1)?.Step ?? long.MaxValue;
+                        var decrease = d.Find(_ => _.Position == position - velocity && _.Velocity == velocity - 1)?.Step ?? long.MaxValue;
 
-                        if (unchanged == int.MaxValue && increase == int.MaxValue && decrease == int.MaxValue)
+                        if (unchanged == long.MaxValue && increase == long.MaxValue && decrease == long.MaxValue)
                             continue;
 
                         if (!d.Any(_ => _.Position == position && _.Velocity == velocity))
