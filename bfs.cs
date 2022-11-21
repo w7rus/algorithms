@@ -1,7 +1,10 @@
+using System.Numerics;
+
 namespace BFS
 {
-    public class Bfs<TNodeKey>
+    public class Bfs<TNodeKey, TDim>
         where TNodeKey : IEquatable<TNodeKey>
+        where TDim : IBinaryInteger<TDim>, IMinMaxValue<TDim>, IUnsignedNumber<TDim>
     {
         private class BfsException : Exception
         {
@@ -17,22 +20,22 @@ namespace BFS
         private record NodeKeyData
         {
             public bool Visited;
-            public ulong AccLength;
+            public TDim AccLength;
             public TNodeKey From;
         }
         
-        private readonly Dictionary<TNodeKey, Dictionary<TNodeKey, ulong>> _map;
+        private readonly Dictionary<TNodeKey, Dictionary<TNodeKey, TDim>> _map;
 
-        public Bfs(Dictionary<TNodeKey, Dictionary<TNodeKey, ulong>> map)
+        public Bfs(Dictionary<TNodeKey, Dictionary<TNodeKey, TDim>> map)
         {
             _map = map;
         }
 
-        public (Stack<TNodeKey> path, ulong accLength) Path(TNodeKey nodeKeyFrom, TNodeKey nodeKeyTo)
+        public (Stack<TNodeKey> path, TDim accLength) Path(TNodeKey nodeKeyFrom, TNodeKey nodeKeyTo)
         {
             var nodeKeys = _map.Select(_ => _.Key).Union(_map.SelectMany(_ => _.Value).Select(__ => __.Key)).ToArray();
             var path = new Stack<TNodeKey>();
-            ulong length;
+            TDim length;
 
             try
             {
@@ -40,13 +43,13 @@ namespace BFS
                 var s = nodeKeys.ToDictionary(_ => _, _ => new NodeKeyData
                 {
                     Visited = false, 
-                    AccLength = 0,
+                    AccLength = default,
                     From = default
                 });
                 
                 q.Enqueue(nodeKeyFrom);
                 s[nodeKeyFrom].Visited = true;
-                s[nodeKeyFrom].AccLength = 0;
+                s[nodeKeyFrom].AccLength = default;
 
                 while (q.Count > 0)
                 {
@@ -79,9 +82,9 @@ namespace BFS
             return (path, length);
         }
         
-        private static ulong SumClampMaxValue(ulong value1, ulong value2)
+        private static TDim SumClampMaxValue(TDim value1, TDim value2)
         {
-            return ulong.MaxValue - value1 < value2 || ulong.MaxValue - value2 < value1 ? ulong.MaxValue : value1 + value2;
+            return TDim.MaxValue - value1 < value2 || TDim.MaxValue - value2 < value1 ? TDim.MaxValue : value1 + value2;
         }
     }
     
@@ -91,8 +94,8 @@ namespace BFS
         {
             //It takes small amount of time to actually find path in a large graph
             
-            var w = 5000;
-            var h = 5000;
+            var w = 1000;
+            var h = 1000;
             
             var map = new Dictionary<int, Dictionary<int, ulong>>();
             
@@ -128,12 +131,12 @@ namespace BFS
                 }
             }
             
-            var bfs = new Bfs<int>(map);
+            var bfs = new Bfs<int, ulong>(map);
             
             var result = bfs.Path(0, w * h - 1);
             Console.WriteLine($"{string.Join(" -> ", result.path)} : {result.accLength}");
             
-            //Another proof of least-length wave override to find shortest path
+            //Another proof to find shortest path
 
             map = new Dictionary<int, Dictionary<int, ulong>>
             {
@@ -178,9 +181,9 @@ namespace BFS
                 },
             };
             
-            bfs = new Bfs<int>(map);
+            bfs = new Bfs<int, ulong>(map);
             
-            result = bfs.Path(1, 0);
+            result = bfs.Path(0, 1);
             Console.WriteLine($"{string.Join(" -> ", result.path)} : {result.accLength}");
         }
     }
