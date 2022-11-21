@@ -1,3 +1,5 @@
+using System.Numerics;
+
 namespace Kraskal
 {
     internal static class Program
@@ -50,14 +52,15 @@ namespace Kraskal
                 },
             };
 
-            var kraskal = new Kraskal<int>(map);
+            var kraskal = new Kraskal<int, ulong>(map);
             var result = kraskal.Set();
             Console.WriteLine($"{string.Join(" + ", result)}");
         }
     }
 
-    public class Kraskal<TNodeKey>
+    public class Kraskal<TNodeKey, TDim>
         where TNodeKey : IEquatable<TNodeKey>
+        where TDim : IBinaryInteger<TDim>, IMinMaxValue<TDim>, IUnsignedNumber<TDim>
     {
         private class KraskalException : Exception
         {
@@ -70,9 +73,9 @@ namespace Kraskal
             }
         }
 
-        private readonly Dictionary<TNodeKey, Dictionary<TNodeKey, ulong>> _map;
+        private readonly Dictionary<TNodeKey, Dictionary<TNodeKey, TDim>> _map;
 
-        public Kraskal(Dictionary<TNodeKey, Dictionary<TNodeKey, ulong>> map)
+        public Kraskal(Dictionary<TNodeKey, Dictionary<TNodeKey, TDim>> map)
         {
             _map = map;
         }
@@ -84,7 +87,7 @@ namespace Kraskal
 
             try
             {
-                var q = new PriorityQueue<(TNodeKey, TNodeKey), ulong>();
+                var q = new PriorityQueue<(TNodeKey, TNodeKey), TDim>();
                 foreach (var (nodeKeyFrom, kvNodeKeyTo) in _map)
                 {
                     foreach (var (nodeKeyTo, length) in kvNodeKeyTo)
