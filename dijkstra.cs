@@ -55,18 +55,18 @@
                 var result = dijkstra.Path(0, 1);
                 var end = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 Console.WriteLine($"{string.Join(" -> ", result.path)} : {result.accLength} [{end - start}]");
-
+                
                 var dijkstraHeap = new DijkstraHeap<int, ulong>(map);
-
+                
                 var startHeap = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 var resultHeap = dijkstraHeap.Path(0, 1);
                 var endHeap = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 Console.WriteLine($"{string.Join(" -> ", resultHeap.path)} : {resultHeap.accLength} [{endHeap - startHeap}]");
                 
-                var w = 10;
-                var h = 10;
+                var w = 100;
+                var h = 100;
                 
-                var map2 = new Dictionary<int, Dictionary<int, ulong>>();
+                var map2 = new Dictionary<int, Dictionary<int, uint>>();
                 
                 /*
                  * Generates graph:
@@ -88,7 +88,7 @@
                     for (var col = 0; col < w; col++)
                     {
                         var idx = row * w + col;
-                        map2[idx] = new Dictionary<int, ulong>();
+                        map2[idx] = new Dictionary<int, uint>();
                         if (col + 1 < w)
                         {
                             map2[idx].Add(idx + 1, 1);
@@ -100,14 +100,14 @@
                     }
                 }
                 
-                var dijkstra2 = new Dijkstra<int, ulong>(map2);
+                var dijkstra2 = new Dijkstra<int, uint>(map2);
                 
                 start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 result = dijkstra2.Path(0, w * h - 1);
                 end = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 Console.WriteLine($"{string.Join(" -> ", result.path)} : {result.accLength} [{end - start}]");
                 
-                var dijkstraHeap2 = new DijkstraHeap<int, ulong>(map2);
+                var dijkstraHeap2 = new DijkstraHeap<int, uint>(map2);
                 
                 startHeap = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 resultHeap = dijkstraHeap2.Path(0, w * h - 1);
@@ -151,6 +151,8 @@
             {
                 var path = new Stack<TNodeKey>();
                 TDim length;
+                
+                var nodeKeys = _map.Select(_ => _.Key).Union(_map.SelectMany(_ => _.Value).Select(__ => __.Key)).ToArray();
 
                 try
                 {
@@ -158,6 +160,9 @@
                     {
                         nodeKeyFrom
                     };
+                    
+                    var v = nodeKeys.ToDictionary(_ => _, _ => true);
+                    v[nodeKeyFrom] = false;
 
                     var d = new Dictionary<int, Dictionary<TNodeKey, (TDim accLength, TNodeKey from)>>
                     {
@@ -181,13 +186,15 @@
                         }
 
                         s.Add(minNodeKey);
+                        v[minNodeKey] = false;
                         
                         if (s.Count == _map[nodeKeyFrom].Count)
                             break;
 
                         d.Add(dl + 1, new Dictionary<TNodeKey, (TDim accLength, TNodeKey from)>());
 
-                        foreach (var kvNodeKeyTo in _map[nodeKeyFrom].Where(kvNodeKeyTo => !s.Contains(kvNodeKeyTo.Key)))
+                        var kvNodeKeyToList = _map[nodeKeyFrom].Where(kvNodeKeyTo => v[kvNodeKeyTo.Key]).ToList();
+                        foreach (var kvNodeKeyTo in kvNodeKeyToList)
                         {
                             if (!_map[minNodeKey].TryGetValue(kvNodeKeyTo.Key, out var addLength))
                                 addLength = _infinity;
@@ -265,6 +272,8 @@
             {
                 var path = new Stack<TNodeKey>();
                 TDim length;
+                
+                var nodeKeys = _map.Select(_ => _.Key).Union(_map.SelectMany(_ => _.Value).Select(__ => __.Key)).ToArray();
 
                 try
                 {
@@ -272,6 +281,9 @@
                     {
                         nodeKeyFrom
                     };
+
+                    var v = nodeKeys.ToDictionary(_ => _, _ => true);
+                    v[nodeKeyFrom] = false;
 
                     var d = new Dictionary<int, Dictionary<TNodeKey, (TDim accLength, TNodeKey from)>>
                     {
@@ -287,18 +299,23 @@
 
                     for (var dl = 0;; dl++)
                     {
-                        queue.EnqueueRange(_map[nodeKeyFrom].Where(kvNodeKeyTo => !s.Contains(kvNodeKeyTo.Key)).Select(_ => (_.Key, _.Value)));
+                        foreach (var nodeKey in v.Where(_ => _.Value))
+                        {
+                            queue.Enqueue(nodeKey.Key, _map[nodeKeyFrom][nodeKey.Key]);
+                        }
                         
                         var minNodeKey = queue.Dequeue();
 
                         s.Add(minNodeKey);
+                        v[minNodeKey] = false;
                         
                         if (s.Count == _map[nodeKeyFrom].Count)
                             break;
 
                         d.Add(dl + 1, new Dictionary<TNodeKey, (TDim accLength, TNodeKey from)>());
-
-                        foreach (var kvNodeKeyTo in _map[nodeKeyFrom].Where(kvNodeKeyTo => !s.Contains(kvNodeKeyTo.Key)))
+                        
+                        var kvNodeKeyToList = _map[nodeKeyFrom].Where(kvNodeKeyTo => v[kvNodeKeyTo.Key]).ToList();
+                        foreach (var kvNodeKeyTo in kvNodeKeyToList)
                         {
                             if (!_map[minNodeKey].TryGetValue(kvNodeKeyTo.Key, out var addLength))
                                 addLength = _infinity;
