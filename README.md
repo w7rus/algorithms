@@ -21,6 +21,6 @@ Finds maximum flow for each path found between source and drain via BFS/DFS
 ## Transport Task
 Finds minimal expences paths from providers to customers refilling required resource amount
 
-Solves tree (all possible N-1 combinations to set 0's on depleted resource allocations) of transport task plan degeneracy to find the best possible solution
+Solves tree of transport task plan degeneracy fixes to find the best possible solution
 
 Has transport task plan loop guard, skips solutions when reallocating resources eventually does a loop
