@@ -19,7 +19,7 @@ Finds acyclic fully-connected minimal length graph from the given one
 Finds maximum flow for each path found between source and drain via BFS/DFS
 
 ## Transport Task
-Finds minimal expences in delivery length and resource amount that consumers receive from providers
+Finds minimal expences paths from providers to customers refilling required resource amount
 
 Solves tree (all possible N-1 combinations to set 0's on depleted resource allocations) of transport task plan degeneracy to find the best possible solution
 
